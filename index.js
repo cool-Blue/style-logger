@@ -19,7 +19,7 @@ var EE = require('events');
  * @event error - emitted if logStream.write calls back with error
  * @event finish = emitted if logStream.write calls back clean
  * */
-module.exports = function styleLogger(logStream, styles) {
+module.exports = function styleLogger(logStream, styles, breaks) {
 
     const DEF_ENC = null;
 
@@ -39,7 +39,7 @@ module.exports = function styleLogger(logStream, styles) {
         // contained in the instance execution context.
         function l(m, cb) {
             _cb = cb;
-            _logger(_transform(m), cb);
+            _logger("", _transform(m), "", cb);
             _endFlag = false;
             return this
         }
@@ -94,8 +94,11 @@ module.exports = function styleLogger(logStream, styles) {
                     process.nextTick(_cb.bind(logStream), e)
                 }
             });
-            _baseLogger = function(m, cb) {
-                logStream.write(m + '\n', DEF_ENC,
+            _baseLogger = function(s, m, e, cb) {
+                if(Array.isArray(m)) logstream
+                    .emit('error',
+                        new Error('string expected: CSS formatting does not work when writing to a stream'));
+                logStream.write(s + m + e + '\n', DEF_ENC,
                     /**
                      * Pass on the call back and emit synthetic events
                      */
@@ -109,12 +112,23 @@ module.exports = function styleLogger(logStream, styles) {
         } else {
             /**
              * Write to stdio
-             * @param m
+             * @param s {string} - pre tag = \n || ""
+             * @param m [{]{string}|{array}] - messange or [message, CSS,...]
+             * @param e {string} - post tag = \n || ""
              * @param cb
              * @private
              */
-            _baseLogger = function(m, cb) {
-                console.log(m);
+            _baseLogger = function(s, m, e, cb) {
+                //
+                if(Array.isArray(m)){
+                    if(typeof window !== 'undefined'){
+                        s += s; e += e;
+                    }
+                    m[0] = s + m[0] + e;
+                    console.log.apply(console, m);
+                } else {
+                    console.log(s + m + e);
+                }
                 process.nextTick(() => _emitter.emit('finish'));
                 if(cb) {
                     process.nextTick(cb.bind(null))
@@ -127,15 +141,18 @@ module.exports = function styleLogger(logStream, styles) {
         // subclass the default logger _l by binding the styles
         return Object.keys(styles).reduce(
             function(res, k) {
-                var isStart = /.*start/i;
-                var isEnd = /.*end/i;
-                res[k] = function(m) {
+                var isStart = breaks.isStart;
+                var isEnd = breaks.isEnd;
+                res[k] = function(m, cb) {
                     m = _transform(typeof m === 'undefined' ? "" : m);
                     var s = m.match(isStart);
                     var e = m.match(isEnd);
-                    _logger(((s && !_endFlag) ? "\n" : "")
-                        + (_fancy ? styles[k](m) : m)
-                        + (e ? "\n" : ""));
+                    _logger(
+                        ((s && !_endFlag) ? "\n" : ""),
+                        (_fancy ? styles[k](m) : m),
+                        (e ? "\n" : ""),
+                        cb
+                    );
                     _endFlag = (s || e) ? e : _endFlag;
                     return this
                 };

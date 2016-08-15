@@ -6,7 +6,7 @@
 /**
  * SUT
  * */
-const StyleLogger = require('../stylelogger.js');
+const StyleLogger = require('../index.js');
 /**
  * dependencies
  * */
@@ -27,16 +27,23 @@ function logger(logStream) {
 
     var ESC = '\x1b[', gEND = "m", allOFF = `${ESC}0m`, BOLD = 1, ITALIC = 3, UNDERLINE = 4, IMAGENEGATIVE = 7, FONTDEFAULT = 10, FONT2 = 11, FONT3 = 12, FONT4 = 13, FONT5 = 14, FONT6 = 15, IMAGEPOSITIVE = 27, BLACK = 30, RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, MAGENTA = 35, CYAN = 36, WHITE = 37, BG_BLACK = 40, BG_RED = 41, BG_GREEN = 42, BG_YELLOW = 43, BG_BLUE = 44, BG_MAGENTA = 45, BG_CYAN = 46, BG_WHITE = 47, CLEAR_SCREEN = `${ESC}2J`;
 
+    function b(f){return f ? '\n' : ""};
     var ansiStyles = {
-        h1: (m) => `${ESC}${BOLD};${RED}m${m}${allOFF}`,
-        h2: (m) => `${ESC}${BOLD};${BLUE}m${m}${allOFF}`,
-        h3: (m) => `${ESC}${BOLD};${YELLOW}m${m}${allOFF}`,
-        cls: () => `${CLEAR_SCREEN}`
+        h1: (m, s, e) => `${ESC}${BOLD};${RED}${b(s)}m${b(s)}${m}${b(e)}${allOFF}`,
+        h2: (m, s, e) => `${ESC}${BOLD};${BLUE}m${b(s)}${m}${b(e)}${allOFF}`,
+        h3: (m, s, e) => `${ESC}${BOLD};${YELLOW}m${b(s)}${m}${b(e)}${allOFF}`,
+    };
+    var cssRed = '#c04848', cssBlue = '#07c', cssYellow = '#ead10e';
+    var cssStyles = {
+        h1: (m) => [`%c${m}`, `font-weight: bold; color: ${cssRed}`],
+        h2: (m) => [`%c${m}`, `font-weight: bold; color: ${cssBlue}`],
+        h3: (m) => [`%c${m}`, `font-weight: bold; color: ${cssYellow}`]
     };
 
     return StyleLogger(
         logStream,
-        ansiStyles
+        ansiStyles,
+        {isStart: /.*start/i, isEnd: /.*end/i}
     )
 
 }
@@ -139,7 +146,7 @@ describe('colourLog', function() {
             it('calls back after logging is complete with no args', function(done) {
                 const testLog = logger();
                 var cbSpy = spyAsync();
-                testLog(content, cbSpy.cb(done))
+                testLog.h1(content, cbSpy.cb(done))
             });
             it('asynchronously emits finish after logging is complete', function(done) {
                 const testLog = logger();
@@ -272,4 +279,3 @@ function Hook_stdout(transf) {
         logOut: ""
     }
 }
-

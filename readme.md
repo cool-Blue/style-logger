@@ -1,6 +1,6 @@
 # style-logger
 
-A very basic logger that accepts a style function object that can be used to provide colour output to stdout using [ANSI escape sequences](http://ascii-table.com/ansi-escape-sequences.php).
+A very basic, isomorphic logger that accepts a style function object that can be used to provide colour output to stdout using [ANSI escape sequences](http://ascii-table.com/ansi-escape-sequences.php) in node or `CSS` style fomatting foe `console.log`.
 
 ## Usage
 
@@ -13,28 +13,29 @@ Builds a logger complex including the provided styles and returns a customisable
 ```js
     const StyleLogger  = require('style-logger')
     
-     function logger(logStream) {
-     
-         var ESC = '\x1b[', gEND = "m", allOFF = `${ESC}0m`, BOLD = 1, ITALIC = 3, UNDERLINE = 4,
-         IMAGENEGATIVE = 7, FONTDEFAULT = 10, FONT2 = 11, FONT3 = 12, FONT4 = 13, FONT5 = 14,
-         FONT6 = 15, IMAGEPOSITIVE = 27, BLACK = 30, RED = 31, GREEN = 32, YELLOW = 33,
-         BLUE = 34, MAGENTA = 35, CYAN = 36, WHITE = 37, BG_BLACK = 40, BG_RED = 41, BG_GREEN = 42,
-         BG_YELLOW = 43, BG_BLUE = 44, BG_MAGENTA = 45, BG_CYAN = 46, BG_WHITE = 47,
-         CLEAR_SCREEN = `${ESC}2J`;
-     
-         // consumer provides style function object
-         var ansiStyles = {
-             h1: (m) => `${ESC}${BOLD};${RED}m${m}${allOFF}`,
-             h2: (m) => `${ESC}${BOLD};${BLUE}m${m}${allOFF}`,
-             h3: (m) => `${ESC}${BOLD};${YELLOW}m${m}${allOFF}`,
-         };
-     
-         return StyleLogger(
-             logStream,
-             ansiStyles
-         )
-     
-     }
+    function logger(logStream) {
+    
+        var ESC = '\x1b[', gEND = "m", allOFF = `${ESC}0m`, BOLD = 1, ITALIC = 3, UNDERLINE = 4, IMAGENEGATIVE = 7, FONTDEFAULT = 10, FONT2 = 11, FONT3 = 12, FONT4 = 13, FONT5 = 14, FONT6 = 15, IMAGEPOSITIVE = 27, BLACK = 30, RED = 31, GREEN = 32, YELLOW = 33, BLUE = 34, MAGENTA = 35, CYAN = 36, WHITE = 37, BG_BLACK = 40, BG_RED = 41, BG_GREEN = 42, BG_YELLOW = 43, BG_BLUE = 44, BG_MAGENTA = 45, BG_CYAN = 46, BG_WHITE = 47, CLEAR_SCREEN = `${ESC}2J`;
+    
+        var ansiStyles = {
+            h1: (m, s, e) => `${ESC}${BOLD};${RED}m${m}${allOFF}`,
+            h2: (m, s, e) => `${ESC}${BOLD};${BLUE}m${m}${allOFF}`,
+            h3: (m, s, e) => `${ESC}${BOLD};${YELLOW}m${m}${allOFF}`
+        };
+        var cssRed = '#c04848', cssBlue = '#07c', cssYellow = '#ead10e';
+        var cssStyles = {
+            h1: (m) => [`%c${m}`, `font-weight: bold; color: ${cssRed}`],
+            h2: (m) => [`%c${m}`, `font-weight: bold; color: ${cssBlue}`],
+            h3: (m) => [`%c${m}`, `font-weight: bold; color: ${cssYellow}`]
+        };
+    
+        return StyleLogger(
+            logStream,
+            typeof window !== 'undefined' ? cssStyles : ansiStyles,
+            {isStart: /.*start/i, isEnd: /.*end/i}
+        )
+    
+    }
      
     // If a logStream is not provided, logs to stdout
     var log = logger();
@@ -65,3 +66,5 @@ Builds a logger complex including the provided styles and returns a customisable
     log.onfinish(() => console.log("finished writing to " + this.path || "stdout");
     log.onerror((e) => console.log("error writing to " + this.path || "stdout\n" + e.message);
 ```
+
+

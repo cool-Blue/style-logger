@@ -1,6 +1,6 @@
 {
   "name": "style-logger",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "logs to stdout or a stream optionaly using styles passed by the consumer",
   "main": "stylelogger.js",
   "directories": {
