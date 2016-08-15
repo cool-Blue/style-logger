@@ -11,7 +11,7 @@ A very basic logger that accepts a style function object that can be used to pro
 Builds a logger complex including the provided styles and returns a customisable, logger complex including customisation methods.  If no write stream is provided it will log to `stdout`.
 
 ```js
-    const StyleLogger  = require('stylelogger')
+    const StyleLogger  = require('style-logger')
     
      function logger(logStream) {
      
@@ -36,31 +36,32 @@ Builds a logger complex including the provided styles and returns a customisable
      
      }
      
-     If a logStream is not provided, logs to stdout
+    // If a logStream is not provided, logs to stdout
+    var log = logger();
    
     // returns styled logs...
-    logger.h1(_message_)
-    logger.h2(_message_)
-    logger.h3(_message_)
+    log.h1(_message_)
+    log.h2(_message_)
+    log.h3(_message_)
     
     // or default vanilla
-    logger(_message_)
+    log(_message_)
     
     // with or without escape sequences (for non-TTY output)
-    logger.plain();
-    logger.fancy();
+    log.plain();
+    log.fancy();
     
     // enable or dissable
-    logger.om();
-    logger.off();
+    log.om();
+    log.off();
     
     // apply a transform to the message before it is wrapped
-    logger.transform(m => timeStamp() + '\t' + m)
+    log.transform(m => timeStamp() + '\t' + m)
     
     // provide a callback for async operation
-    logger.h1(_message_, done)  // will call back after write is completed
+    log.h1(_message_, done)  // will call back after write is completed
     
     // also provides events for finnish and errors
-    logger.onfinish(() => console.log("finished writing to " + this.path || "stdout");
-    logger.onerror((e) => console.log("error writing to " + this.path || "stdout\n" + e.message);
+    log.onfinish(() => console.log("finished writing to " + this.path || "stdout");
+    log.onerror((e) => console.log("error writing to " + this.path || "stdout\n" + e.message);
 ```
